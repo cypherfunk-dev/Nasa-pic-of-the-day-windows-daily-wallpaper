@@ -10,17 +10,23 @@ $imageUrl = $response.hdurl
 # Set the directory to the User folder
 Set-Location "$env:USERPROFILE"
 
-# Create Script Directory
-$usrDir = New-Item -ItemType Directory -Name  "NASA - Picture of the Day"
+# Create image Directory if not exist
 
-# Create variable with the image name
+if (!(Test-Path "NASA - Picture of the Day" -PathType Container)){
+    $usrDir = New-Item -ItemType Directory -Name  "NASA - Picture of the Day"
+    Write-Host "La carpeta ha sido creada"
+} else {
+    Write-Host "La carpeta ya existe"
+}
+
+# Image name variable
 $imgDir = "$($usrDir.FullName)\$(Get-Date -Format "dd-MM-yyyy").jpg"
 
-# Download the image
+# Downloading image
 Invoke-WebRequest -Uri $imageUrl -OutFile $imgDir
+Write-Host "Imagen descargada"
 
 # Set the image as the desktop wallpaper
-
 Add-Type -TypeDefinition @'
 using System.Runtime.InteropServices;
 public class Wallpaper {
@@ -39,4 +45,3 @@ $wallpaper = $imgDir  # absolute path to the image file
 [Wallpaper]::SetWallpaper($wallpaper)
 
 # Create a scheduled task to run the script every day
-# To do
