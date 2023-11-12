@@ -2,19 +2,18 @@
 Set-Location "$env:USERPROFILE"
 
 # Create image Directory if not exist
-if (!(Test-Path "NASA - Picture of the Day" -PathType Container)) {
-    New-Item -ItemType Directory -Name  "NASA - Picture of the Day"
+if (!(Test-Path "apod" -PathType Container)) {
+    New-Item -ItemType Directory -Name  "apod"
     Write-Host "La carpeta ha sido creada"
 }
 # Image name variable
-$imgDir = "$("NASA - Picture of the Day")\$(Get-Date -Format "dd-MM-yyyy").jpg"
+$imgDir = "$("apod")\$(Get-Date -Format "dd-MM-yyyy").jpg"
 
 # Looking if image is already downloaded
 if ( Test-Path -Path $imgDir -PathType Leaf ) {
     Write-Host "El archivo ya esta descargado"
-    Exit
-}
-
+    
+} else{
 # Define the NASA API URL
 $url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
 
@@ -22,13 +21,17 @@ $url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
 $response = Invoke-RestMethod -Uri $url -Method Get
 
 # Get the URL of the image
-$imageUrl = $response.url
+# response.url for Standard Quality
+# response.hdurl for High Quality
+
+$imageUrl = $response.hdurl
 
 # Downloading image
 Invoke-WebRequest -Uri $imageUrl -OutFile $imgDir
+}
 
 # Set the image as the desktop wallpaper
-Add-Type -TypeDefinition @'
+Add-Type -TypeDefinition @"
 using System.Runtime.InteropServices;
 public class Wallpaper {
     public const uint SPI_SETDESKWALLPAPER = 0x0014;
@@ -40,7 +43,7 @@ public class Wallpaper {
         SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, path, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
     }
 }
-'@
+"@
 
-$wallpaper = $imageUrl  # absolute path to the image file
+$wallpaper = $imgDir  # absolute path to the image file
 [Wallpaper]::SetWallpaper("$env:USERPROFILE\$wallpaper")
