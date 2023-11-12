@@ -1,3 +1,24 @@
+# Set the directory to the User folder
+Set-Location "$env:USERPROFILE"
+
+# Create image Directory if not exist
+
+if (!(Test-Path "NASA - Picture of the Day" -PathType Container)){
+    New-Item -ItemType Directory -Name  "NASA - Picture of the Day"
+    Write-Host "La carpeta ha sido creada"
+} else {
+    Write-Host "La carpeta ya existe"
+}
+
+# Image name variable
+$imgDir = "$("NASA - Picture of the Day")\$(Get-Date -Format "dd-MM-yyyy").jpg"
+
+# Looking if image is already downloaded
+if ( Test-Path -Path $imgDir -PathType Leaf ){
+    Write-Host "El archivo ya esta descargado"
+    Exit
+}
+
 # Define the NASA API URL
 $url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
 
@@ -6,21 +27,6 @@ $response = Invoke-RestMethod -Uri $url -Method Get
 
 # Get the URL of the image
 $imageUrl = $response.hdurl
-
-# Set the directory to the User folder
-Set-Location "$env:USERPROFILE"
-
-# Create image Directory if not exist
-
-if (!(Test-Path "NASA - Picture of the Day" -PathType Container)){
-    $usrDir = New-Item -ItemType Directory -Name  "NASA - Picture of the Day"
-    Write-Host "La carpeta ha sido creada"
-} else {
-    Write-Host "La carpeta ya existe"
-}
-
-# Image name variable
-$imgDir = "$($usrDir.FullName)\$(Get-Date -Format "dd-MM-yyyy").jpg"
 
 # Downloading image
 Invoke-WebRequest -Uri $imageUrl -OutFile $imgDir
