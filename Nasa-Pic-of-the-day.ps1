@@ -2,11 +2,11 @@
 Set-Location "$env:USERPROFILE"
 
 # Create image Directory if not exist
-
-if (!(Test-Path "NASA - Picture of the Day" -PathType Container)){
+if (!(Test-Path "NASA - Picture of the Day" -PathType Container)) {
     New-Item -ItemType Directory -Name  "NASA - Picture of the Day"
     Write-Host "La carpeta ha sido creada"
-} else {
+}
+else {
     Write-Host "La carpeta ya existe"
 }
 
@@ -14,7 +14,7 @@ if (!(Test-Path "NASA - Picture of the Day" -PathType Container)){
 $imgDir = "$("NASA - Picture of the Day")\$(Get-Date -Format "dd-MM-yyyy").jpg"
 
 # Looking if image is already downloaded
-if ( Test-Path -Path $imgDir -PathType Leaf ){
+if ( Test-Path -Path $imgDir -PathType Leaf ) {
     Write-Host "El archivo ya esta descargado"
     Exit
 }
@@ -47,16 +47,12 @@ public class Wallpaper {
 }
 '@
 
-$wallpaper = $imgDir  # absolute path to the image file
+$wallpaper = $imgDir
 [Wallpaper]::SetWallpaper($wallpaper)
 
-# Create a scheduled task to run the script every day, at every startup or at logon
-$taskTriggers = @( 
-    New-ScheduledTaskTrigger -Daily -At 00:01
-    New-ScheduledTaskTrigger -AtStartup
-    New-ScheduledTaskTrigger -AtLogon
-    )
-$taskAction = New-ScheduledTaskAction -Execute $(Invoke-Expression -Command $PSCommandPath)
 
 
-Register-ScheduledTask -TaskName 'NASA-pic' -Trigger $taskTriggers -Action $taskAction -User "NT AUTHORITY\SYSTEM"
+if (!(Get-ScheduledTask -TaskName NASA-pic)) {
+    Write-Host "Se creara la tarea"
+    Start-Process -FilePath PowerShell.exe -Verb Runas -ArgumentList "-File `"$scriptPath`""
+}
