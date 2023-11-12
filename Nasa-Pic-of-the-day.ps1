@@ -50,4 +50,13 @@ public class Wallpaper {
 $wallpaper = $imgDir  # absolute path to the image file
 [Wallpaper]::SetWallpaper($wallpaper)
 
-# Create a scheduled task to run the script every day
+# Create a scheduled task to run the script every day, at every startup or at logon
+$taskTriggers = @( 
+    New-ScheduledTaskTrigger -Daily -At 00:01
+    New-ScheduledTaskTrigger -AtStartup
+    New-ScheduledTaskTrigger -AtLogon
+    )
+$taskAction = New-ScheduledTaskAction -Execute $(Invoke-Expression -Command $PSCommandPath)
+
+
+Register-ScheduledTask -TaskName 'NASA-pic' -Trigger $taskTriggers -Action $taskAction -User "NT AUTHORITY\SYSTEM"
