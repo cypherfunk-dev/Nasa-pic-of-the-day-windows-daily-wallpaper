@@ -42,12 +42,5 @@ public class Wallpaper {
 }
 '@
 
-
 $wallpaper = $imageUrl  # absolute path to the image file
 [Wallpaper]::SetWallpaper("$env:USERPROFILE\$wallpaper")
-
-
-if (!(Get-ScheduledTask -TaskName NASA-pic)) {
-    Write-Host "Se creara la tarea"
-    Start-Process -FilePath PowerShell.exe -Verb Runas -ArgumentList "-File `"$scriptPath`""
-}
