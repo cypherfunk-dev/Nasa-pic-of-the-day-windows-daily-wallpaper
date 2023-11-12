@@ -6,10 +6,6 @@ if (!(Test-Path "NASA - Picture of the Day" -PathType Container)) {
     New-Item -ItemType Directory -Name  "NASA - Picture of the Day"
     Write-Host "La carpeta ha sido creada"
 }
-else {
-    Write-Host "La carpeta ya existe"
-}
-
 # Image name variable
 $imgDir = "$("NASA - Picture of the Day")\$(Get-Date -Format "dd-MM-yyyy").jpg"
 
@@ -26,11 +22,10 @@ $url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
 $response = Invoke-RestMethod -Uri $url -Method Get
 
 # Get the URL of the image
-$imageUrl = $response.hdurl
+$imageUrl = $response.url
 
 # Downloading image
 Invoke-WebRequest -Uri $imageUrl -OutFile $imgDir
-Write-Host "Imagen descargada"
 
 # Set the image as the desktop wallpaper
 Add-Type -TypeDefinition @'
@@ -47,9 +42,9 @@ public class Wallpaper {
 }
 '@
 
-$wallpaper = $imgDir
-[Wallpaper]::SetWallpaper($wallpaper)
 
+$wallpaper = $imageUrl  # absolute path to the image file
+[Wallpaper]::SetWallpaper("$env:USERPROFILE\$wallpaper")
 
 
 if (!(Get-ScheduledTask -TaskName NASA-pic)) {
