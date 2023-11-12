@@ -10,4 +10,3 @@ _You can run it by simply pasting this script into a PowerShell window_
 TODO:
 
 - Automatic daily task execution
-- .exe - .msi executable
