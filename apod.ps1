@@ -1,10 +1,14 @@
-# Set the directory to the User folder
-Set-Location "$env:USERPROFILE"
-
 # Create image Directory if not exist
 if (!(Test-Path "apod" -PathType Container)) {
     New-Item -ItemType Directory -Name  "apod"
 }
+
+# .ps1 route
+$rutaApod = Join-Path $env:USERPROFILE "apod\apod.ps1"
+
+$apodScript = @'
+# Set the directory to the User folder
+Set-Location "$env:USERPROFILE"
 
 # Image name variable
 $imgDir = "$("apod")\$(Get-Date -Format "dd-MM-yyyy").jpg"
@@ -45,65 +49,72 @@ public class Wallpaper {
 
 $wallpaper = $imgDir  # absolute path to the image file
 [Wallpaper]::SetWallpaper("$env:USERPROFILE\$wallpaper")
+'@
 
+# Image name variable
+$imgDir = "$("apod")\$(Get-Date -Format "dd-MM-yyyy").jpg"
 
-# .ps1 route
-$rutaScriptEnApod = Join-Path $env:USERPROFILE "apod\apod.ps1"
+# Creating Bat
+$apodScript | Out-File -FilePath $rutaApod -Encoding ASCII
 
-# creating ps1 file
-$contenidoScript | Out-File -FilePath $rutaScriptEnApod -Encoding ASCII
+# Image name variable
+$imgDir = "$("apod")\$(Get-Date -Format "dd-MM-yyyy").jpg"
+
+# Looking if image is already downloaded
+if (!(Test-Path -Path $imgDir -PathType Leaf) ) {
+    powershell -ExecutionPolicy Bypass -File $rutaApod
+}
+
+# Ruta Bat
+$rutaBat = Join-Path $env:USERPROFILE "apod\task.bat"
 
 # Bat script content
 $contenidoBat = @"
-start /MIN /B powershell -ExecutionPolicy Bypass -File "$rutaScriptEnApod"
+start /MIN /B powershell -ExecutionPolicy Bypass -File $rutaApod
 "@
-
-$rutaBat = Join-Path $env:USERPROFILE "apod\task.bat"
 
 # Creating Bat
 $contenidoBat | Out-File -FilePath $rutaBat -Encoding ASCII
 
 # Verify if task exists
 if (!(Get-ScheduledTask -TaskName 'NASA-pic')) {
+    # Creating PS1
+    $contenidoPs1 = @'
+    # Directorio donde se encuentra el script
+    $scriptDir = "$env:USERPROFILE\apod"
 
-# Creating PS1
-$contenidoPs1 = @'
-# Directorio donde se encuentra el script
-$scriptDir = "$env:USERPROFILE\apod"
+    # Configuración de los desencadenadores de la tarea
+    $taskTrigger = @( 
+        New-ScheduledTaskTrigger -AtLogOn
+        New-ScheduledTaskTrigger -Once -At (Get-Date
+        New-ScheduledTaskTrigger -Daily -At 3am
+    )
 
-# Configuración de los desencadenadores de la tarea
-$taskTrigger = @( 
-    New-ScheduledTaskTrigger -AtLogOn
-)
+    # Configuración de las condiciones de la tarea (ninguna opción de energía marcada)
+    $taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -DontStopOnIdleEnd
 
-# Configuración de las condiciones de la tarea (ninguna opción de energía marcada)
-$taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -DontStopOnIdleEnd
+    # Obtener el nombre del usuario actual
+    $user = $env:USERNAME
 
-# Obtener el nombre del usuario actual
-$user = $env:USERNAME
+    $batScriptPath = Join-Path $scriptDir "\task.bat"
 
-$batScriptPath = Join-Path $scriptDir "\task.bat"
+    # Configuración de la acción de la tarea
+    $taskAction = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument "/c `"$batScriptPath`""
 
-# Configuración de la acción de la tarea
-$taskAction = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument "/c `"$batScriptPath`""
-
-# Registro de la tarea programada
-try{
-Register-ScheduledTask -TaskName 'NASA-pic' -Trigger $taskTrigger -User $user -Action $taskAction -Settings $taskSettings -asJob -RunLevel Highest
-} catch {
-    Write-Host "Error al crear la tarea programada"
-    Read-Host "Presiona Enter para salir"
-
-}
+    # Registro de la tarea programada
+    Register-ScheduledTask -TaskName 'NASA-pic' -Trigger $taskTrigger -User $user -Action $taskAction -Settings $taskSettings -asJob -RunLevel Highest
 '@
-$rutaTask = Join-Path $env:USERPROFILE "apod\Task.ps1"
 
-$contenidoPs1 | Out-File -FilePath $rutaTask -Encoding ASCII
+    $rutaTask = Join-Path $env:USERPROFILE "apod\Task.ps1"
 
-# Abrir el script como administrador
-try{
+    $contenidoPs1 | Out-File -FilePath $rutaTask -Encoding ASCII
+
+    # Abrir el script como administrador
     Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $rutaTask" -Verb RunAs -Wait
-} catch{
-    Write-Host "Hubo un error al ejecutar"
-}
-}
+
+    if (Get-ScheduledTask -TaskName 'NASA-pic'){
+        Remove-Item $rutaTask
+    }
+} else {
+        powershell -ExecutionPolicy Bypass -File $rutaApod
+    }
