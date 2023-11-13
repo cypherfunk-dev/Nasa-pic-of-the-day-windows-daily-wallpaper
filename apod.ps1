@@ -55,7 +55,7 @@ $contenidoScript | Out-File -FilePath $rutaScriptEnApod -Encoding ASCII
 
 # Bat script content
 $contenidoBat = @"
-start /MIN /B powershell -ExecutionPolicy Bypass -File "C:\Users\andre\Git\Nasa-pic-of-the-day\apod.ps1"
+start /MIN /B powershell -ExecutionPolicy Bypass -File "$rutaScriptEnApod"
 "@
 
 $rutaBat = Join-Path $env:USERPROFILE "apod\task.bat"
