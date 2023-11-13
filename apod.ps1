@@ -50,15 +50,12 @@ $wallpaper = $imgDir  # absolute path to the image file
 # .ps1 route
 $rutaScriptEnApod = Join-Path $env:USERPROFILE "apod\apod.ps1"
 
-# .ps1 content
-$contenidoScript = Get-Content $MyInvocation.MyCommand.Path
-
 # creating ps1 file
 $contenidoScript | Out-File -FilePath $rutaScriptEnApod -Encoding ASCII
 
 # Bat script content
 $contenidoBat = @"
-powershell -ExecutionPolicy Bypass -File "C:\Users\andre\Git\Nasa-pic-of-the-day\apod.ps1"
+start /MIN /B powershell -ExecutionPolicy Bypass -File "C:\Users\andre\Git\Nasa-pic-of-the-day\apod.ps1"
 "@
 
 $rutaBat = Join-Path $env:USERPROFILE "apod\task.bat"
@@ -71,16 +68,12 @@ if (!(Get-ScheduledTask -TaskName 'NASA-pic')) {
 
 # Creating PS1
 $contenidoPs1 = @'
-Write-Host "Se creara la tarea"
-
 # Directorio donde se encuentra el script
 $scriptDir = "$env:USERPROFILE\apod"
 
 # Configuración de los desencadenadores de la tarea
 $taskTrigger = @( 
     New-ScheduledTaskTrigger -AtLogOn
-    New-ScheduledTaskTrigger -Daily -At "03:33"
-
 )
 
 # Configuración de las condiciones de la tarea (ninguna opción de energía marcada)
@@ -96,8 +89,7 @@ $taskAction = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument "/c `"$batScr
 
 # Registro de la tarea programada
 try{
-Register-ScheduledTask -TaskName 'NASA-pic' -Trigger $taskTrigger -User $user -Action $taskAction -Settings $taskSettings -RunLevel Highest
-Read-Host "Presiona Enter para salir"
+Register-ScheduledTask -TaskName 'NASA-pic' -Trigger $taskTrigger -User $user -Action $taskAction -Settings $taskSettings -asJob -RunLevel Highest
 } catch {
     Write-Host "Error al crear la tarea programada"
     Read-Host "Presiona Enter para salir"
