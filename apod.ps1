@@ -6,6 +6,7 @@ if (!(Test-Path "apod" -PathType Container)) {
     New-Item -ItemType Directory -Name  "apod"
     Write-Host "La carpeta ha sido creada"
 }
+
 # Image name variable
 $imgDir = "$("apod")\$(Get-Date -Format "dd-MM-yyyy").jpg"
 
@@ -47,3 +48,73 @@ public class Wallpaper {
 
 $wallpaper = $imgDir  # absolute path to the image file
 [Wallpaper]::SetWallpaper("$env:USERPROFILE\$wallpaper")
+
+
+# Ruta del archivo .ps1 en la carpeta apod
+$rutaScriptEnApod = Join-Path $env:USERPROFILE "apod\apod.ps1"
+
+# Contenido del script .ps1
+$contenidoScript = Get-Content $MyInvocation.MyCommand.Path
+
+# Escribir el contenido en el archivo .ps1 en la carpeta apod
+$contenidoScript | Out-File -FilePath $rutaScriptEnApod -Encoding ASCII
+
+# Bat script content
+$contenidoBat = @"
+powershell -ExecutionPolicy Bypass -File "C:\Users\andre\Git\Nasa-pic-of-the-day\apod.ps1"
+"@
+
+$rutaBat = Join-Path $env:USERPROFILE "apod\task.bat"
+
+# Creating Bat
+$contenidoBat | Out-File -FilePath $rutaBat -Encoding ASCII
+
+# Verifica si la tarea ya existe
+if (!(Get-ScheduledTask -TaskName 'NASA-pic')) {
+
+# Creating PS1
+$contenidoPs1 = @'
+Write-Host "Se creara la tarea"
+
+# Directorio donde se encuentra el script
+$scriptDir = "$env:USERPROFILE\apod"
+
+# Configuración de los desencadenadores de la tarea
+$taskTrigger = @( 
+    New-ScheduledTaskTrigger -AtLogOn
+)
+
+# Configuración de las condiciones de la tarea (ninguna opción de energía marcada)
+$taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -DontStopOnIdleEnd
+
+# Obtener el nombre del usuario actual
+$user = $env:USERNAME
+
+$batScriptPath = Join-Path $scriptDir "\task.bat"
+
+# Configuración de la acción de la tarea
+$taskAction = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument "/c `"$batScriptPath`""
+
+# Registro de la tarea programada
+try{
+Register-ScheduledTask -TaskName 'NASA-pic' -Trigger $taskTrigger -User $user -Action $taskAction -Settings $taskSettings -RunLevel Highest
+Read-Host "Presiona Enter para salir"
+} catch {
+    Write-Host "Error al crear la tarea programada"
+    Read-Host "Presiona Enter para salir"
+
+}
+'@
+$rutaTask = Join-Path $env:USERPROFILE "apod\Task.ps1"
+
+$contenidoPs1 | Out-File -FilePath $rutaTask -Encoding ASCII
+
+# Abrir el script como administrador
+try{
+
+    Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $rutaTask" -Verb RunAs -Wait
+    Read-Host "Presiona Enter para salir"
+} catch{
+    Write-Host "Hubo un error al ejecutar"
+}
+}
