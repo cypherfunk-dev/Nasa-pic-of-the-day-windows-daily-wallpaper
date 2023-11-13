@@ -86,12 +86,11 @@ if (!(Get-ScheduledTask -TaskName 'NASA-pic')) {
     # Configuración de los desencadenadores de la tarea
     $taskTrigger = @( 
         New-ScheduledTaskTrigger -AtLogOn
-        New-ScheduledTaskTrigger -Once -At (Get-Date
         New-ScheduledTaskTrigger -Daily -At 3am
     )
 
     # Configuración de las condiciones de la tarea (ninguna opción de energía marcada)
-    $taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -DontStopOnIdleEnd
+    $taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -DontStopOnIdleEnd 
 
     # Obtener el nombre del usuario actual
     $user = $env:USERNAME
@@ -109,12 +108,16 @@ if (!(Get-ScheduledTask -TaskName 'NASA-pic')) {
 
     $contenidoPs1 | Out-File -FilePath $rutaTask -Encoding ASCII
 
+    while (!(Test-Path $rutaTask -PathType Leaf )) {
+    Start-Sleep -Seconds 1
+    }
+
     # Abrir el script como administrador
     Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $rutaTask" -Verb RunAs -Wait
 
     if (Get-ScheduledTask -TaskName 'NASA-pic'){
         Remove-Item $rutaTask
-    }
+    } 
 } else {
-        powershell -ExecutionPolicy Bypass -File $rutaApod
-    }
+    powershell -ExecutionPolicy Bypass -File $rutaApod
+}
