@@ -4,16 +4,13 @@ Set-Location "$env:USERPROFILE"
 # Create image Directory if not exist
 if (!(Test-Path "apod" -PathType Container)) {
     New-Item -ItemType Directory -Name  "apod"
-    Write-Host "La carpeta ha sido creada"
 }
 
 # Image name variable
 $imgDir = "$("apod")\$(Get-Date -Format "dd-MM-yyyy").jpg"
 
 # Looking if image is already downloaded
-if ( Test-Path -Path $imgDir -PathType Leaf ) {
-    Write-Host "El archivo ya esta descargado"
-    
+if ( Test-Path -Path $imgDir -PathType Leaf ) {    
 } else{
 # Define the NASA API URL
 $url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
@@ -50,13 +47,13 @@ $wallpaper = $imgDir  # absolute path to the image file
 [Wallpaper]::SetWallpaper("$env:USERPROFILE\$wallpaper")
 
 
-# Ruta del archivo .ps1 en la carpeta apod
+# .ps1 route
 $rutaScriptEnApod = Join-Path $env:USERPROFILE "apod\apod.ps1"
 
-# Contenido del script .ps1
+# .ps1 content
 $contenidoScript = Get-Content $MyInvocation.MyCommand.Path
 
-# Escribir el contenido en el archivo .ps1 en la carpeta apod
+# creating ps1 file
 $contenidoScript | Out-File -FilePath $rutaScriptEnApod -Encoding ASCII
 
 # Bat script content
@@ -69,7 +66,7 @@ $rutaBat = Join-Path $env:USERPROFILE "apod\task.bat"
 # Creating Bat
 $contenidoBat | Out-File -FilePath $rutaBat -Encoding ASCII
 
-# Verifica si la tarea ya existe
+# Verify if task exists
 if (!(Get-ScheduledTask -TaskName 'NASA-pic')) {
 
 # Creating PS1
@@ -82,6 +79,8 @@ $scriptDir = "$env:USERPROFILE\apod"
 # Configuración de los desencadenadores de la tarea
 $taskTrigger = @( 
     New-ScheduledTaskTrigger -AtLogOn
+    New-ScheduledTaskTrigger -Daily -At "03:33"
+
 )
 
 # Configuración de las condiciones de la tarea (ninguna opción de energía marcada)
@@ -111,9 +110,7 @@ $contenidoPs1 | Out-File -FilePath $rutaTask -Encoding ASCII
 
 # Abrir el script como administrador
 try{
-
     Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $rutaTask" -Verb RunAs -Wait
-    Read-Host "Presiona Enter para salir"
 } catch{
     Write-Host "Hubo un error al ejecutar"
 }
