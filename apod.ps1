@@ -10,17 +10,18 @@ $apodScript = @'
 # Set the directory to the User folder
 Set-Location "$env:USERPROFILE"
 
-# Image name variable
-$imgDir = "$("apod")\$(Get-Date -Format "dd-MM-yyyy").jpg"
-
-# Looking if image is already downloaded
-if ( Test-Path -Path $imgDir -PathType Leaf ) {    
-} else{
 # Define the NASA API URL
 $url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
 
 # Get the Astronomy Picture of the Day
 $response = Invoke-RestMethod -Uri $url -Method Get
+
+# Image name variable
+$imgDir = "$("apod")\$($response.date).jpg"
+
+# Looking if image is already downloaded
+if ( Test-Path -Path $imgDir -PathType Leaf ) {    
+} else{
 
 # Get the URL of the image
 # response.url for Standard Quality
@@ -50,9 +51,6 @@ public class Wallpaper {
 $wallpaper = $imgDir  # absolute path to the image file
 [Wallpaper]::SetWallpaper("$env:USERPROFILE\$wallpaper")
 '@
-
-# Image name variable
-$imgDir = "$("apod")\$(Get-Date -Format "dd-MM-yyyy").jpg"
 
 # Creating Bat
 $apodScript | Out-File -FilePath $rutaApod -Encoding ASCII
@@ -89,7 +87,7 @@ if (!(Get-ScheduledTask -TaskName 'NASA-pic')) {
         New-ScheduledTaskTrigger -Daily -At 3am
     )
 
-    # Configuración de las condiciones de la tarea (ninguna opción de energía marcada)
+    # Configuración de las condiciones de la tarea
     $taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -DontStopOnIdleEnd 
 
     # Obtener el nombre del usuario actual
