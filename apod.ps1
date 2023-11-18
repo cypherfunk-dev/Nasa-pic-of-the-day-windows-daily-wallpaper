@@ -86,12 +86,10 @@ if (!(Get-ScheduledTask -TaskName 'NASA-pic')) {
     )
     $taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -DontStopOnIdleEnd 
 
-    # Getting current username
     $user = $env:USERNAME
 
     $batScriptPath = Join-Path $scriptDir "\task.bat"
 
-    # Configuración de la acción de la tarea
     $taskAction = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument "/c `"$batScriptPath`""
 
     # Programmed task register
