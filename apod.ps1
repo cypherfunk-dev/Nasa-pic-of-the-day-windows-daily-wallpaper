@@ -1,22 +1,27 @@
-# Set the directory to the User folder
+# Setting directory to the user folder
 Set-Location "$env:USERPROFILE"
 
-# Create image Directory if not exist
+# Create image directory if not exist
 if (!(Test-Path "apod" -PathType Container)) {
     New-Item -ItemType Directory -Name  "apod"
 }
 
-# Image name variable
-$imgDir = "$("apod")\$(Get-Date -Format "dd-MM-yyyy").jpg"
+# .ps1 path
+$rutaApod = Join-Path $env:USERPROFILE "apod\apod.ps1"
 
-# Looking if image is already downloaded
-if ( Test-Path -Path $imgDir -PathType Leaf ) {    
-} else{
+$apodScript = @'
+
 # Define the NASA API URL
 $url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
 
-# Get the Astronomy Picture of the Day
+# Querying the api
 $response = Invoke-RestMethod -Uri $url -Method Get
+
+# Image name variable
+$imgDir = "$($env:USERPROFILE)\$("apod")\$($response.date).jpg"
+
+# Looking if image is already downloaded
+if (!(Test-Path -Path $imgDir -PathType Leaf )) {    
 
 # Get the URL of the image
 # response.url for Standard Quality
@@ -44,66 +49,67 @@ public class Wallpaper {
 "@
 
 $wallpaper = $imgDir  # absolute path to the image file
-[Wallpaper]::SetWallpaper("$env:USERPROFILE\$wallpaper")
+[Wallpaper]::SetWallpaper("$wallpaper")
+'@
 
+# Creating Powershell script file
+$apodScript | Out-File -FilePath $rutaApod -Encoding ASCII
 
-# .ps1 route
-$rutaScriptEnApod = Join-Path $env:USERPROFILE "apod\apod.ps1"
+# Image name variable
+$imgDir = "$("apod")\$(Get-Date -Format "dd-MM-yyyy").jpg"
 
-# creating ps1 file
-$contenidoScript | Out-File -FilePath $rutaScriptEnApod -Encoding ASCII
+# Looking if image is already downloaded
+if (!(Test-Path -Path $imgDir -PathType Leaf) ) {
+    powershell -ExecutionPolicy Bypass -File $rutaApod
+}
+
+# Bat Path
+$rutaBat = Join-Path $env:USERPROFILE "apod\task.bat"
 
 # Bat script content
 $contenidoBat = @"
-start /MIN /B powershell -ExecutionPolicy Bypass -File "C:\Users\andre\Git\Nasa-pic-of-the-day\apod.ps1"
+powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File $rutaApod
 "@
-
-$rutaBat = Join-Path $env:USERPROFILE "apod\task.bat"
 
 # Creating Bat
 $contenidoBat | Out-File -FilePath $rutaBat -Encoding ASCII
 
 # Verify if task exists
 if (!(Get-ScheduledTask -TaskName 'NASA-pic')) {
+    # Creating PS1
+    $contenidoPs1 = @'
+    $scriptDir = "$env:USERPROFILE\apod"
+    
+    $taskTrigger = @( 
+        New-ScheduledTaskTrigger -AtLogOn
+        New-ScheduledTaskTrigger -Daily -At 3am
+    )
+    $taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -DontStopOnIdleEnd 
 
-# Creating PS1
-$contenidoPs1 = @'
-# Directorio donde se encuentra el script
-$scriptDir = "$env:USERPROFILE\apod"
+    $user = $env:USERNAME
 
-# Configuración de los desencadenadores de la tarea
-$taskTrigger = @( 
-    New-ScheduledTaskTrigger -AtLogOn
-)
+    $batScriptPath = Join-Path $scriptDir "\task.bat"
 
-# Configuración de las condiciones de la tarea (ninguna opción de energía marcada)
-$taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -DontStopOnIdleEnd
-
-# Obtener el nombre del usuario actual
-$user = $env:USERNAME
-
-$batScriptPath = Join-Path $scriptDir "\task.bat"
-
-# Configuración de la acción de la tarea
-$taskAction = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument "/c `"$batScriptPath`""
-
-# Registro de la tarea programada
-try{
-Register-ScheduledTask -TaskName 'NASA-pic' -Trigger $taskTrigger -User $user -Action $taskAction -Settings $taskSettings -asJob -RunLevel Highest
-} catch {
-    Write-Host "Error al crear la tarea programada"
-    Read-Host "Presiona Enter para salir"
-
-}
+    $taskAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$batScriptPath`""
+    # Programmed task register
+    Register-ScheduledTask -TaskName 'NASA-pic' -Trigger $taskTrigger -User $user -Action $taskAction -Settings $taskSettings -asJob -RunLevel Highest
 '@
-$rutaTask = Join-Path $env:USERPROFILE "apod\Task.ps1"
 
-$contenidoPs1 | Out-File -FilePath $rutaTask -Encoding ASCII
+    $rutaTask = Join-Path $env:USERPROFILE "apod\Task.ps1"
 
-# Abrir el script como administrador
-try{
+    $contenidoPs1 | Out-File -FilePath $rutaTask -Encoding ASCII
+    
+    while (!(Test-Path $rutaTask -PathType Leaf )) {
+    Start-Sleep -Seconds 1
+    }
+
+    # Running task script as admin
     Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $rutaTask" -Verb RunAs -Wait
-} catch{
-    Write-Host "Hubo un error al ejecutar"
-}
+
+    # Removing script once task is created  
+    if (Get-ScheduledTask -TaskName 'NASA-pic'){
+        Remove-Item $rutaTask
+    } 
+} else {
+    powershell -ExecutionPolicy Bypass -File $rutaApod
 }
