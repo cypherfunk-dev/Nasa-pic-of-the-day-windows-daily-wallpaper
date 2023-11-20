@@ -56,7 +56,7 @@ $wallpaper = $imgDir  # absolute path to the image file
 $apodScript | Out-File -FilePath $rutaApod -Encoding ASCII
 
 # Image name variable
-$imgDir = "$("apod")\$(Get-Date -Format "dd-MM-yyyy").jpg"
+$imgDir = "$($env:USERPROFILE)\$("apod")\$(Get-Date -Format "dd-MM-yyyy").jpg"
 
 # Looking if image is already downloaded
 if (!(Test-Path -Path $imgDir -PathType Leaf) ) {
@@ -68,7 +68,7 @@ $rutaBat = Join-Path $env:USERPROFILE "apod\task.bat"
 
 # Bat script content
 $contenidoBat = @"
-powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File $rutaApod
+powershell.exe -ExecutionPolicy Bypass -File $rutaApod
 "@
 
 # Creating Bat
@@ -90,7 +90,8 @@ if (!(Get-ScheduledTask -TaskName 'NASA-pic')) {
 
     $batScriptPath = Join-Path $scriptDir "\task.bat"
 
-    $taskAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$batScriptPath`""
+    $taskAction = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument "/c `"$batScriptPath`""
+
     # Programmed task register
     Register-ScheduledTask -TaskName 'NASA-pic' -Trigger $taskTrigger -User $user -Action $taskAction -Settings $taskSettings -asJob -RunLevel Highest
 '@
