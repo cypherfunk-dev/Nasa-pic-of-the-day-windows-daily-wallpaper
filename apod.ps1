@@ -50,6 +50,18 @@ public class Wallpaper {
 
 $wallpaper = $imgDir  # absolute path to the image file
 [Wallpaper]::SetWallpaper("$wallpaper")
+clear
+
+#Print data about picture
+
+$pictitle = $response.title
+$picdate = $response.date
+$picdescription = $response.explanation
+Write-Host "Title:"$pictitle  -ForegroundColor Yellow
+Write-Host "Date:"$picdate "`n" "`n" -ForegroundColor Green
+Write-Host $picdescription"`n" "`n" -ForegroundColor Cyan
+Read-Host -Prompt "Press any key to continue"
+
 '@
 
 # Creating Powershell script file
