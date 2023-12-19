@@ -60,8 +60,7 @@ Write-Host "Astronomy Picture of the Day - NASA"  -ForegroundColor DarkBlue -Bac
 Write-Host "Title:"$pictitle  -ForegroundColor Yellow
 Write-Host "Date:"$picdate "`n" "`n" -ForegroundColor Green
 Write-Host $picdescription"`n" "`n" -ForegroundColor Cyan
-Write-Host "Developed by https://github.com/andrescarlos-gm"
-Read-Host -Prompt "Press any key to continue" 
+Read-Host -Prompt  "Developed by https://github.com/andrescarlos-gm" 
 }
 '@
 
